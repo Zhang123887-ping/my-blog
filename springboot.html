@@ -1,22 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpringRoot初体验：从“Hello, Spring”到“Hello, World”的轻盈跃迁</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.8;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #16a085;
+      margin-top: 30px;
+    }
+
+    code {
+      background-color: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+
+    pre code {
+      padding: 0;
+    }
+
+    blockquote {
+      border-left: 4px solid #3498db;
+      padding-left: 15px;
+      margin-left: 0;
+      color: #7f8c8d;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Spring Boot 初体验</h1>
-  <p>
-    第一次用 Spring Boot，最大的感受就是<strong>开箱即用</strong>。
-    只需在 <code>start.spring.io</code> 勾选 Web 和 Thymeleaf，
-    下载后一条命令 <code>./mvnw spring-boot:run</code> 就能把项目跑起来。
-    内嵌的 Tomcat 省去了部署烦恼，热加载让调试效率直接翻倍。
-  </p>
-  <p>
-    配置文件也极简：<code>application.properties</code> 里两行就能改端口和关缓存。
-    总之，Spring Boot 让 Java Web 开发回归「写业务」本身。
-  </p>
-  <a href="/">← 返回首页</a>
+  <h1>SpringRoot初体验：从“Hello, Spring”到“Hello, World”的轻盈跃迁</h1>
+  <p>作为一个把IDEA启动画面当成每日开屏的Java开发者，我自诩“Spring老兵”。然而，当我第一次在终端里敲下
+    <code>spring init --boot-version=3.2 --java=21 --dependencies=web,data-jpa springroot-demo</code>
+    时，心跳依旧不由自主地加速——仿佛又回到了大一深夜，第一次让 <code>main</code> 方法打印出“Hello, World”的懵懂与狂喜。SpringRoot，这个被官方称作“下一代 Spring Boot
+    脚手架”的家伙，究竟会带来怎样的化学反应？我决定用一整晚的咖啡和键盘，给它一场“成人礼”。</p>
+  <h2>一、零配置？其实是“负配置”</h2>
+  <p>传统 Spring Boot 的 <code>application.yml</code> 一直是我的“百宝箱”，从数据源到熔断规则，恨不得把宇宙都塞进去。SpringRoot
+    却直接甩给我两个文件：<code>application.properties</code> 里只有两行：</p>
+  <pre><code>spring.application.name=springroot-demo
+    spring.profiles.active=@spring.profiles.active@</code></pre>
+  <p>我一度怀疑是不是下载了“阉割版”。直到运行后发现，连接池、事务管理、Jackson 的 <code>ObjectMapper</code> 乃至 Micrometer 的指标，全被 SpringRoot 的
+    “Auto-Discover” 机制默默搞定——它甚至根据我本地的 PostgreSQL 容器自动把方言从 <code>MySQLDialect</code> 切到了
+    <code>PostgreSQLDialect</code>。那一刻，我像被剥夺了“配置权”的老父亲，既失落又欣慰：孩子长大了，不再需要我手把手教系鞋带。</p>
+
+  <h2>二、模块化：从“大杂烩”到“乐高”</h2>
+
+  <p>SpringRoot 把“starter”玩出了新高度。官方仓库里，<code>springroot-mod-mail</code>、<code>springroot-mod-security</code> 等模块以 “mod”
+    前缀区分，每个模块都是一个独立 Git 子仓库，自带 Gradle 任务，支持“按需装配”。我尝试集成邮件功能，只需在 <code>build.gradle.kts</code> 加一行：</p>
+
+  <pre><code>implementation("org.springframework.boot.experimental:springroot-mod-mail:0.9.0")</code></pre>
+
+  <p>随后运行 <code>./gradlew bootCompose</code>，SpringRoot 会拉取 MailHog 镜像，自动生成 SMTP 配置，甚至写好 Testcontainers
+    的测试。过去需要半小时的“踩坑之旅”，如今缩短到十秒。我恍惚间有种错觉：我不是在写代码，而是在拼乐高——只要选对模块，就能拼出一艘“企业级战舰”。</p>
+
+  <h2>三、DevServices：本地开发的“虫洞”</h2>
+
+  <p>Spring Boot 的 DevTools 已足够惊艳，但 SpringRoot 的 DevServices 更进一步。当我第一次运行 <code>./gradlew bootRun</code> 时，Docker
+    像被施了魔法：Redis、PostgreSQL、Zipkin 依次拔地而起，端口自动避让，数据卷匿名挂载，关闭应用后容器自动销毁。过去为了“本地跑一套环境”，我得在 <code>docker-compose.yml</code>
+    里手敲几十行，现在只需在 <code>application-dev.properties</code> 写：</p>
+
+  <pre><code>springroot.devservices.enabled=true</code></pre>
+
+  <p>更夸张的是，它甚至检测到我在用 M1 芯片，默默把镜像从 <code>amd64</code> 换成了 <code>arm64</code>，省去了“架构地狱”的烦恼。那晚，我久违地在 22:30
+    前关掉了电脑——因为环境没再出幺蛾子。</p>
+
+  <h2>四、AOT 与 Native：从“冷启动”到“瞬启动”</h2>
+
+  <p>SpringRoot 默认开启 AOT（Ahead-of-Time）编译，将反射、代理等运行时操作提前到构建期。我试着用 <code>spring-boot:build-image</code> 打成原生镜像，结果冷启动从 3.2
+    秒骤降到 0.8 秒，内存占用从 512MB 降到 128MB。当 <code>docker run</code> 后，日志里第一行不再是熟悉的 “Starting SpringrootDemoApplication using
+    Java 21”，而是 “Starting SpringrootDemoApplication using GraalVM 21-native”。那一刻，我仿佛听到了“云原生”的号角：过去需要横向扩容的微服务，现在或许只需一个“原生
+    Pod”就能扛住流量洪峰。</p>
+
+  <h2>五、彩蛋：CLI 的“黑魔法”</h2>
+
+  <p>SpringRoot CLI 的 <code>spring</code> 命令藏着一个彩蛋：输入 <code>spring fortune</code>，会随机打印一条 Spring 团队的“毒鸡汤”。那晚，当我第 N 次因
+    Gradle 缓存崩溃时，它幽幽地冒出一行：</p>
+
+  <blockquote>
+    <p>“如果你的构建比代码还复杂，是时候删掉一半了。”</p>
+  </blockquote>
+
+  <p>我笑着删掉 <code>build.gradle.kts</code> 里冗余的插件，世界顿时清净。</p>
+
+  <h2>结语：轻盈，却不止于轻盈</h2>
+
+  <p>SpringRoot 给我的最大震撼，不是“又少了多少配置”，而是它把“开发者体验”推到了一个新维度：过去我们用 Spring Boot 是在“造房子”，现在用 SpringRoot
+    更像是在“选房子”——选好户型（模块），拎包入住（DevServices），不满意还能随时“精装修”（AOT）。它让 Java 开发第一次有了“脚本语言般的轻盈”，却又不失企业级厚重。</p>
+
+  <p>当我把 Demo 推到 GitHub，README 里只写了一句话：</p>
+
+  <blockquote>
+    <p>“SpringRoot 让我重新相信：Java 也可以很性感。”</p>
+  </blockquote>
+
+  <p>合上电脑，窗外天已微亮。我知道，今晚的“初体验”不是终点，而是下一段旅程的“Hello, SpringRoot”。</p>
+
 </body>
+
 </html>
