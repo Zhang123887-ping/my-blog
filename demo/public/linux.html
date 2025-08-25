@@ -1,20 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux 常用命令（纯文字速查版）</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 15px;
+    }
+
+    h2 {
+      color: #16a085;
+      margin-top: 25px;
+      padding-left: 10px;
+      border-left: 4px solid #16a085;
+    }
+
+    .command-category {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .command-item {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed #eee;
+    }
+
+    .command-item:last-child {
+      border-bottom: none;
+    }
+
+    code {
+      background-color: #f1f1f1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #d63384;
+      display: inline-block;
+      margin-right: 10px;
+      min-width: 250px;
+    }
+
+    .desc {
+      color: #666;
+    }
+
+    .tip {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #e8f4fd;
+      border-radius: 6px;
+      border-left: 4px solid #3498db;
+    }
+
+    @media (max-width: 768px) {
+      code {
+        display: block;
+        margin-bottom: 8px;
+        min-width: unset;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Linux 常用命令</h1>
-  <ul>
-    <li><code>ls -alh</code>：列出详细信息</li>
-    <li><code>grep -R "关键字" .</code>：递归搜索</li>
-    <li><code>tail -f app.log</code>：实时查看日志</li>
-    <li><code>chmod +x *.sh</code>：给脚本加执行权限</li>
-    <li><code>netstat -tunlp | grep 8080</code>：查端口占用</li>
-  </ul>
-  <p>掌握这 5 条命令，日常开发和排查问题足够用。</p>
-  <a href="https://zhang123887-ping.github.io/my-blog/">← 返回首页</a>
+  <h1>Linux 常用命令</h1>
+  <div class="command-category">
+    <h2>文件目录</h2>
+    <div class="command-item">
+      <code>ls -alh</code>
+      <span class="desc">详细列表，人类可读大小</span>
+    </div>
+    <div class="command-item">
+      <code>cd -</code>
+      <span class="desc">返回上一次目录</span>
+    </div>
+    <div class="command-item">
+      <code>pwd</code>
+      <span class="desc">显示当前路径</span>
+    </div>
+    <div class="command-item">
+      <code>mkdir -p a/b/c</code>
+      <span class="desc">递归建目录</span>
+    </div>
+    <div class="command-item">
+      <code>rm -rf dir</code>
+      <span class="desc">强制删目录</span>
+    </div>
+    <div class="command-item">
+      <code>cp -r src dst</code>
+      <span class="desc">递归复制</span>
+    </div>
+    <div class="command-item">
+      <code>mv old new</code>
+      <span class="desc">移动/重命名</span>
+    </div>
+    <div class="command-item">
+      <code>touch file</code>
+      <span class="desc">新建空文件或更新时间戳</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>文件查看与编辑</h2>
+    <div class="command-item">
+      <code>cat file</code>
+      <span class="desc">全量输出</span>
+    </div>
+    <div class="command-item">
+      <code>less file</code>
+      <span class="desc">分页查看，可搜索</span>
+    </div>
+    <div class="command-item">
+      <code>head -n 20 file</code>
+      <span class="desc">看前 20 行</span>
+    </div>
+    <div class="command-item">
+      <code>tail -f log</code>
+      <span class="desc">实时追踪日志</span>
+    </div>
+    <div class="command-item">
+      <code>grep -i 'err' log -C3</code>
+      <span class="desc">忽略大小找并显示前后 3 行</span>
+    </div>
+    <div class="command-item">
+      <code>awk '{print $1}' access.log | sort | uniq -c | sort -nr | head</code>
+      <span class="desc">统计 IP 前 10</span>
+    </div>
+    <div class="command-item">
+      <code>sed -i 's/old/new/g' *.conf</code>
+      <span class="desc">批量替换</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>进程与资源</h2>
+    <div class="command-item">
+      <code>ps -ef | grep java</code>
+      <span class="desc">查 Java 进程</span>
+    </div>
+    <div class="command-item">
+      <code>top -H -p PID</code>
+      <span class="desc">查看某进程所有线程 CPU</span>
+    </div>
+    <div class="command-item">
+      <code>htop</code>
+      <span class="desc">彩色 top，需安装</span>
+    </div>
+    <div class="command-item">
+      <code>kill PID</code>
+      <span class="desc">优雅终止</span>
+    </div>
+    <div class="command-item">
+      <code>kill -9 PID</code>
+      <span class="desc">强制杀</span>
+    </div>
+    <div class="command-item">
+      <code>jstack PID > jstack.log</code>
+      <span class="desc">导出线程栈</span>
+    </div>
+    <div class="command-item">
+      <code>jmap -dump:format=b,file=heap.hprof PID</code>
+      <span class="desc">导出堆</span>
+    </div>
+    <div class="command-item">
+      <code>ulimit -n</code>
+      <span class="desc">查看文件句柄上限</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>网络</h2>
+    <div class="command-item">
+      <code>netstat -tunlp | grep 8080</code>
+      <span class="desc">端口占用</span>
+    </div>
+    <div class="command-item">
+      <code>ss -lntp</code>
+      <span class="desc">更快替代 netstat</span>
+    </div>
+    <div class="command-item">
+      <code>curl -I URL</code>
+      <span class="desc">查看响应头</span>
+    </div>
+    <div class="command-item">
+      <code>curl -X POST -d 'k=v' URL</code>
+      <span class="desc">发 POST</span>
+    </div>
+    <div class="command-item">
+      <code>wget URL</code>
+      <span class="desc">下载文件</span>
+    </div>
+    <div class="command-item">
+      <code>telnet ip port</code>
+      <span class="desc">测端口连通</span>
+    </div>
+    <div class="command-item">
+      <code>nc -zv ip 1-65535</code>
+      <span class="desc">批量扫端口</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>磁盘与系统</h2>
+    <div class="command-item">
+      <code>df -h</code>
+      <span class="desc">查看挂载与使用率</span>
+    </div>
+    <div class="command-item">
+      <code>du -sh *</code>
+      <span class="desc">统计当前目录大小</span>
+    </div>
+    <div class="command-item">
+      <code>free -m</code>
+      <span class="desc">内存占用</span>
+    </div>
+    <div class="command-item">
+      <code>uptime</code>
+      <span class="desc">系统负载</span>
+    </div>
+    <div class="command-item">
+      <code>whoami / id</code>
+      <span class="desc">当前用户/权限</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>权限与压缩</h2>
+    <div class="command-item">
+      <code>chmod +x script.sh</code>
+      <span class="desc">加执行权</span>
+    </div>
+    <div class="command-item">
+      <code>chown -R user:group dir</code>
+      <span class="desc">改属主</span>
+    </div>
+    <div class="command-item">
+      <code>tar czvf a.tar.gz dir</code>
+      <span class="desc">打包并压缩</span>
+    </div>
+    <div class="command-item">
+      <code>tar xzvf a.tar.gz</code>
+      <span class="desc">解压</span>
+    </div>
+    <div class="command-item">
+      <code>zip -r a.zip dir && unzip a.zip</code>
+      <span class="desc">zip压缩与解压</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>系统服务（CentOS7+/Ubuntu16+）</h2>
+    <div class="command-item">
+      <code>systemctl start nginx</code>
+      <span class="desc">启动服务</span>
+    </div>
+    <div class="command-item">
+      <code>systemctl enable nginx</code>
+      <span class="desc">开机自启</span>
+    </div>
+    <div class="command-item">
+      <code>systemctl status nginx</code>
+      <span class="desc">查状态</span>
+    </div>
+    <div class="command-item">
+      <code>journalctl -u nginx -f</code>
+      <span class="desc">实时看服务日志</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>SSH & 终端</h2>
+    <div class="command-item">
+      <code>ssh user@host</code>
+      <span class="desc">远程登录</span>
+    </div>
+    <div class="command-item">
+      <code>scp file user@host:/path</code>
+      <span class="desc">上传文件</span>
+    </div>
+    <div class="command-item">
+      <code>rsync -avz local/ remote:/dir/</code>
+      <span class="desc">增量同步</span>
+    </div>
+    <div class="command-item">
+      <code>tmux new -s work</code>
+      <span class="desc">新建会话</span>
+    </div>
+    <div class="command-item">
+      <code>tmux a -t work</code>
+      <span class="desc">恢复会话</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>环境变量</h2>
+    <div class="command-item">
+      <code>export PATH=$PATH:/opt/bin</code>
+      <span class="desc">临时生效</span>
+    </div>
+    <div class="command-item">
+      <code>echo 'export PATH=$PATH:/opt/bin' >> ~/.bashrc</code>
+      <span class="desc">永久生效</span>
+    </div>
+    <div class="command-item">
+      <code>source ~/.bashrc</code>
+      <span class="desc">立即加载</span>
+    </div>
+  </div>
+
+  <div class="command-category">
+    <h2>实用快捷键</h2>
+    <div class="command-item">
+      <code>Ctrl + a / e</code>
+      <span class="desc">行首/行尾</span>
+    </div>
+    <div class="command-item">
+      <code>Ctrl + r</code>
+      <span class="desc">反向搜索历史</span>
+    </div>
+    <div class="command-item">
+      <code>!!</code>
+      <span class="desc">重复上一条命令</span>
+    </div>
+    <div class="command-item">
+      <code>!$</code>
+      <span class="desc">用上条最后一个参数</span>
+    </div>
+  </div>
+
+  <div class="tip">
+    <p>20 条以内即可覆盖日常开发 90% 场景，忘记参数时 <code>man cmd</code> 或 <code>cmd --help</code>。</p>
+  </div>
+
 </body>
+
 </html>
