@@ -1,22 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyBatis 使用笔记：让 SQL 与 Java 再次握手</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.8;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #16a085;
+      margin-top: 30px;
+      border-left: 4px solid #16a085;
+      padding-left: 15px;
+    }
+
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #d63384;
+    }
+
+    pre {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      border-left: 3px solid #6cb6ff;
+    }
+
+    pre code {
+      padding: 0;
+      color: #333;
+      background-color: transparent;
+    }
+
+    blockquote {
+      border-left: 4px solid #3498db;
+      padding-left: 15px;
+      margin-left: 0;
+      color: #7f8c8d;
+      background-color: #edf7ff;
+      padding: 10px 15px;
+      border-radius: 0 5px 5px 0;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .tip {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px 15px;
+      margin: 15px 0;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .warning {
+      background-color: #f8d7da;
+      border-left: 4px solid #dc3545;
+      padding: 10px 15px;
+      margin: 15px 0;
+      border-radius: 0 5px 5px 0;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>MyBatis 使用笔记</h1>
-  <p>
-    MyBatis 作为半自动 ORM，SQL 自控力极强。只需三步即可跑通：
-    1) 在 <code>application.properties</code> 配好数据源；
-    2) 写接口 + XML/SQL；
-    3) 启动类加 <code>@MapperScan</code>。
-  </p>
-  <p>
-    小技巧：开启 <code>mybatis.configuration.log-impl=STDOUT_LOGGING</code>
-    能在控制台直接打印 SQL，定位问题快 10 倍。
-  </p>
-  <a href="/">← 返回首页</a>
+  <h1>MyBatis 使用笔记：让 SQL 与 Java 再次握手</h1>
+  <p>如果把 Hibernate 比作自动挡汽车，MyBatis 就是手动挡：离合器、油门、档位都得自己踩，但正因为全程可控，才能在山路十八弯的复杂业务里精准过弯。这篇笔记记录了我从 0 到
+    1、再到线上踩坑的完整历程，力求把“面试能背、实战能用、排错能救命”的知识点一次讲透。</p>
+
+  <h2>一、依赖与整合</h2>
+
+  <p>Spring Boot 3.x 以后，官方 starter 的 GAV 发生了变化，别再写老坐标：</p>
+
+  <pre><code>&lt;dependency&gt;
+&lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+&lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+&lt;version&gt;3.0.3&lt;/version&gt;
+&lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;com.mysql&lt;/groupId&gt; &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt; &lt;scope&gt;runtime&lt;/scope&gt; &lt;/dependency&gt;</code></pre>
+  <p>application.yml 中务必显式声明 <code>mapper-locations</code>，否则 XML 会被无情忽略：</p>
+
+  <pre><code>mybatis:
+mapper-locations: classpath:mapper/**/*.xml type-aliases-package: com.example.demo.entity configuration: map-underscore-to-camel-case: true   # 下划线转驼峰 log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 控制台打印 SQL</code></pre>
+  <h2>二、XML 与注解：不是二选一，而是组合技</h2>
+
+  <ul>
+    <li>复杂 SQL、动态 SQL、多表 join 建议 XML，充分利用 <code>&lt;if&gt;</code>、<code>&lt;choose&gt;</code>、<code>&lt;where&gt;</code>
+      等标签。</li>
+    <li>单表简单 CRUD 直接注解，减少文件数量。二者可以共存于同一个 Mapper 接口，MyBatis 会优先加载注解，再合并 XML 语句。</li>
+  </ul>
+
+  <h2>三、动态 SQL 实战：搜索 + 分页</h2>
+
+  <p>需求：按用户名模糊、年龄区间、注册时间倒序分页。XML 片段：</p>
+
+  <pre><code>&lt;select id="search" resultType="User"&gt;
+SELECT * FROM user &lt;where&gt; &lt;if test="username != null and username != ''"&gt; username LIKE concat('%', #{username}, '%') &lt;/if&gt; &lt;if test="minAge != null"&gt; AND age &gt;= #{minAge} &lt;/if&gt; &lt;if test="maxAge != null"&gt; AND age &lt;= #{maxAge} &lt;/if&gt; &lt;/where&gt; ORDER BY create_time DESC &lt;/select&gt;</code></pre>
+  <p>配合 PageHelper：</p>
+
+  <pre><code>PageHelper.startPage(pageNum, pageSize, true);
+List&lt;User&gt; list = userMapper.search(dto); return new PageInfo&lt;&gt;(list);</code></pre>
+  <h2>四、#{} 与 ${}：面试官最爱挖坑</h2>
+
+  <ul>
+    <li><code>#{}</code> 是 JDBC 的 <code>PreparedStatement</code>，安全防注入，会对字符串加单引号。</li>
+    <li><code>${}</code> 直接字符串拼接，可用于动态表名/排序字段，但务必白名单校验，否则 SQL 注入。</li>
+  </ul>
+
+  <div class="tip">
+    <p>记忆口诀："井号安全，美元危险"。</p>
+  </div>
+
+  <h2>五、缓存体系：一级、二级与 Redis</h2>
+
+  <ul>
+    <li><strong>一级缓存</strong>：SqlSession 级别，默认开启；同一个事务中重复查询不会重复发 SQL。</li>
+    <li><strong>二级缓存</strong>：Mapper 级别，需要 <code>&lt;cache/&gt;</code> 标签；默认使用 PerpetualCache 的
+      <code>HashMap</code>，分布式场景意义不大，生产常用 Redis、Caffeine 替代。</li>
+    <li><strong>自定义缓存</strong>：实现 <code>org.apache.ibatis.cache.Cache</code> 接口，把缓存写入 Redis，并加分布式锁解决并发写穿透。</li>
+  </ul>
+
+  <h2>六、延迟加载：别让 N+1 拖垮数据库</h2>
+
+  <p>association、collection 里加 <code>fetchType=lazy</code>，并确保 <code>lazyLoadingEnabled=true</code>。调试时可在日志里观察：首次访问主对象只发
+    1 条 SQL，访问子集合再发 N 条，可结合 <code>aggressiveLazyLoading=false</code> 避免误触发。</p>
+
+  <h2>七、踩坑记录</h2>
+
+  <ul>
+    <li><strong>批量插入返回主键</strong>：MySQL 必须加 <code>useGeneratedKeys="true" keyProperty="id"</code>，且不能是
+      <code>INSERT ... VALUES (...), (...)</code> 的多值语法，否则会只返回第一条主键。</li>
+    <li><strong>LocalDateTime 映射</strong>：老版本 MyBatis 需要 <code>mybatis-typehandlers-jsr310</code>，3.x 已内置，无需额外配置。</li>
+    <li><strong>分页失效</strong>：PageHelper 必须紧挨着查询语句调用，中间不能有别的 MyBatis 查询，否则 ThreadLocal 被污染。</li>
+  </ul>
+
+  <h2>八、单元测试</h2>
+
+  <p>使用 MyBatis 官方提供的 <code>mybatis-spring-boot-starter-test</code>，配合 H2 内存数据库，可在 CI 阶段无依赖跑通全部 XML SQL：</p>
+
+  <pre><code>@MybatisTest
+@AutoConfigureTestDatabase(replace = NONE) class UserMapperTest{ @Autowired UserMapper mapper;
+@Test
+void shouldReturnUserById() {
+    User u = mapper.findById(1L);
+    assertEquals("zhangsan", u.getUsername());
+}
+}</code></pre>
+  <h2>九、小结</h2>
+
+  <p>MyBatis 的魅力在于"SQL 看得见，调优摸得着"。当你能在面试现场徒手画出一级、二级缓存调用链，能把 <code>&lt;where&gt;</code> 动态 SQL 翻译成 MySQL 执行计划，再把批量插入优化到每秒
+    5 万条，你就拥有了从 CRUD Boy 到 SQL 艺术家的入场券。</p>
 </body>
+
 </html>
